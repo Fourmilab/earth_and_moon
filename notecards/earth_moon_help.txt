@@ -1,0 +1,356 @@
+                    Fourmilab Earth and Moon
+
+                              User Guide
+
+Fourmilab's Earth and Moon combines high-resolution NASA imagery
+of the Earth (with ice, snow, and vegetation based upon the
+middle of each month) with calculation of the position of the
+Sun as observed from Earth to show the illuminated portion of a
+cloudless Earth.
+
+The Moon is shown in its current relative position to the Earth,
+with a day and night mask showing the illuminated and dark
+portions of the Moon.  The Moon is usually shown much closer to
+the Earth than its actual distance in order to fit in typical
+display spaces, but if you have a large property (say, 128
+metres on a side), you can configure the Moon's distance to be
+at the correct scale.  The Moon's near face is oriented with
+respect to the Earth accounting for optical librations due to
+the eccentricity and inclination of the Moon's orbit.  Imagery
+of the Moon is derived from NASA high-resolution images from the
+Lunar Reconnaissance Orbiter spacecraft.
+
+Floating Text Legends
+--------------------------
+
+Floating text legends are displayed above the Earth and Moon
+(you can turn them off if you find them distracting) which show
+the following information:
+
+    Earth
+        Date and time (UTC)
+        Julian Day and fraction
+        Sub-solar point (latitude and longitude
+            where the Sun is overhead)
+        Sub-lunar point (latitude and longitude
+            where the Moon is overhead)
+
+    Moon
+        Phase (percentage illuminated)
+        Age (days, hours, and minutes since New Moon)
+        Distance (Earth-Moon distance in km, Earth radii)
+        Angle subtended (apparent diameter of the Moon in degrees)
+        Date and time of Moon phases in this lunation
+
+Chat Commands
+-------------------
+
+You can control Earth and Moon by commands sent to channel /2173
+on local chat.  (You can change the channel number if you
+wish.)  All commands ignore whether letters are upper or lower
+case.  Available commands are:
+
+    Animate
+        Animate updates to the model, stepping through time at
+        the current Animation Rate (default 1/10 second) and
+        advancing time by the Animation Step (default 1/100 day)
+        on each step.  This allows demonstrating how the Moon
+        moves relative to the Earth, how its phases change, and
+        how the seasons progress on the Earth.
+
+    Freeze
+        Halt periodic updates, either based upon real time or
+        during an animation.  This allows stopping updates for
+        closer examination when you see something interesting.
+
+    Help
+        Give this notecard to the requester.
+
+    Real
+        Stop an animation and return to displaying real time
+        positions of the Earth and Moon.
+
+    Reset
+        Reset the scripts in the simulation and restore all
+        default values.  Note that this will lose any settings
+        you have made since you rezzed the object or performed
+        the last reset.
+
+    Set
+        Set a variety of parameters, described below.
+
+        Set Access public/group/owner
+            Set who is allowed to send commands.  By default,
+            only the owner is permitted.  You can permit members
+            of the owner's group or the general public to send
+            commands if you wish and trust their good
+            intentions.
+
+        Set Animation Rate t
+            Set how rapidly updates occur when running an
+            animation to time t in seconds (decimal values
+            permitted).
+
+        Set Animation Step [n] [unit]
+            Set the time step for each animation update.  The
+            step is set to n units, where n is a number (decimal
+            fractions permitted) and unit is one of: minute,
+            hour, day, week, month, or lunation (synodic month,
+            time between new Moons).  If n is omitted, 1 is
+            assumed; if unit is omitted, day is used.
+
+        Set Base on/off
+            Show or hide the wooden base beneath the Earth
+            globe.
+
+        Set Cardinal on/off
+            If set to on, the texture maps for the Earth and
+            Moon and night/day masks are replaced with maps on
+            which the cardinal points (north and south poles and
+            points on the equator every 90 degrees starting at
+            the prime meridian) are indicated by coloured discs,
+            and the equator and meridians by coloured lines.
+            This is primarily intended for developers testing
+            rotation logic.  Turning cardinal mode off restores
+            the standard textures, selecting the sharp
+            terminator.
+
+        Set Channel n
+            Set the local chat channel upon which commands are
+            accepted to n (greater or equal to 2).  By default,
+            commands are accepted on channel 2173.
+
+        Set Date yyyy-mm-dd HH:MM:SS
+        Set Date jjjjjjj.fffff
+            Stop real time updates and display the Earth and
+            Moon as of the specified date, either as date and
+            (optional) time in Universal Time (UTC) or as a
+            Julian day number and fraction.  You can, if you
+            wish, after setting date and time, start an
+            animation from that time with the Animate command.
+            To return to real time display, use the Real
+            command.
+
+        Set Fixed [Earth/Sun]
+            Controls whether the Earth globe is held in a fixed
+            position in global space, with the terminator moving
+            around it, or whether the day and night mask points
+            at the Sun and the Earth rotates under it.  This is
+            a matter of personal preference.  Showing the Earth
+            rotating is more faithful to what you'd see from a
+            viewpoint in space, but people who want to position
+            the globe in, say, a corner, showing their own
+            location on Earth to viewers, may prefer the fixed
+            Earth display and moving terminator.
+
+        Set Inclination [Earth/Sun]
+            When you "Set Fixed Sun", the Sun stays at a fixed
+            longitude with respect to the Earth.  If you set
+            Inclination to Earth (the default), the Sun will
+            also be fixed in latitude and the Earth will tilt
+            back and forth to account for its inclination and
+            progress around its orbit.  Selecting Sun fixes the
+            Earth so the polar axis is vertical and the Sun will
+            appear of move north and south due to the Earth's
+            inclination.  Choose whichever you find more
+            intuitive and interesting.
+
+        Set Legend [Earth/Moon/Both] on/off
+            Show or hide the floating text legends above the
+            Earth and Moon.  If you omit which you wish to
+            control, both are affected.
+
+        Set Moon on/off
+            Shows or hides the Moon.
+
+        Set Moondist r/real
+            Set the distance at which the Moon is displayed from
+            the Earth globe in units of radii of the Earth globe
+            size to r.  This is the distance when the Moon's
+            current distance is equal to the semi-major axis of
+            its orbit.  The distance shown will be scaled
+            according to the Moon's instantaneous distance.  If
+            you specify "real", the Moon will appear at a
+            distance to scale with the size of the Earth and
+            Moon globes. The Moon is a long way from the Earth!
+            If you use the default globe sizes, you'll need a
+            large property (on the order of 128×128 metres,
+            assuming the Earth globe is at the centre) so that
+            the Moon doesn't disappear over the property line.
+            The default Moondist setting is 2.
+
+        Set Night [Earth/Moon/Both] on/off
+            Show or hide the night side masks for the Earth and
+            Moon.  If you omit which you wish to control, both
+            are affected.
+
+        Set Terminator soft/sharp
+            The terminator is the division between day and night
+            on the Earth and Moon globes.  By default, the
+            terminator is shown as a sharp line.  If you specify
+            "soft", a blurred division will be shown.
+            Unfortunately, the rendering engine in most Second
+            Life viewers handles the soft terminator in an
+            eccentric manner, and you'll probably be happier
+            with the appearance of the sharp terminator.
+
+    Spin
+        Slowly rotate the Earth and Moon to show them off from
+        different viewpoints.  This rotation is purely cosmetic;
+        it does not affect the calculated position of the Earth
+        and Moon.  It is handy when you wish to display the
+        model in a corner where people can't walk easily around
+        it to see it from different perspectives.  Of course you
+        can sit on the Earth or Moon while they're spinning!
+
+    Status
+        Display internal status information, including script
+        memory usage, mostly of interest to developers.  The
+        positional astronomy values shown are calculated based
+        upon the last calculation to update the model, whether
+        real time or set with the "Set Date" command.
+
+    Step
+        Stop automatic updates and advance the simulation one
+        animation step.  This stops an in-progress animation.
+        You can restart the animation with the Animate command.
+
+    Stop
+        Stop the spinning.  You can resume the spinning with the
+        Spin command.
+
+Dialogue Commands
+-------------------------
+
+Touching the Earth or Moon globe pops up a dialogue which
+provides direct access to commonly used commands. The dialogue
+may be restricted to owner, group, or available to everybody,
+via the "Set Access" chat command.
+
+    Help
+        Give this notecard to the requester.
+
+    Animate / Real time
+        Toggle animation or real time display.
+
+    Step
+        Stop animation, advance one animation step.
+
+    Spin / Stop spin
+        Toggle spin or stop spinning.
+
+    Legend Earth
+        Toggle Earth floating text legend on and off.
+
+    Legend Moon
+        Toggle Moon floating text legend on and off.
+
+The dialogue commands are purely a convenient way to enter
+frequently-used commands which can also be sent via local chat.
+
+About Accuracy
+-------------------
+
+Positional astronomy, such as calculating the positions of the
+Earth, Moon, and Sun for any date over a long period of time, is
+extremely demanding on the precision of calculation of computer
+systems.  Such calculations are usually done using "double
+precision" arithmetic, which maintains around 15 decimal places
+of accuracy.  Second Life floating point arithmetic uses "single
+precision", which experiences truncation and loss of precision
+between 8 and 9 decimal places.  While this is sufficient to
+make things "look right" in most three-dimensional models, it is
+completely inadequate for the calculations required to display
+the Earth and Moon accurately over long periods of time.
+
+Fourmilab Earth and Moon uses carefully-tailored algorithms
+which have been adapted to make the most of Second Life's
+limited precision.  The result is that things almost always
+"look right", but if you look closely at details, such as the
+times of lunar phases or the the precise positions of the Sun
+and Moon with respect to the Earth, they may be off by as much
+as a few minutes from values computed with double precision
+computation.  The only way to obtain such accuracy in Second
+Life would be to implement a general multiple-precision
+arithmetic library in the Second Life scripting language, and
+this would immediately blow up the size of the code and run into
+the memory limits for Second Life scripts.  Earth and Moon
+attempts to balance these constraints to provide results which
+look correct in all circumstances, while computing values which
+are, for most observers, sufficiently accurate for all practical
+purposes.
+
+Permissions and the Development Kit
+---------------------------------------------
+
+Fourmilab Earth and Moon is delivered with "full permissions".
+Every part of the object, including the scripts, may be copied,
+modified, and transferred without any restrictions whatsoever.
+If you find a bug and fix it, or add a feature, let me know so I
+can include it for others to use.  The distribution includes a
+"Development Kit" directory, which includes all of the textures
+used in the models and diagnostic textures employed in
+development which may be useful in debugging new features.
+
+The Development Kit directory contains a Logs subdirectory which
+includes the development narrative for the project.  If you
+wonder, "Why does it work that way?" the answer may be there.
+
+Fourmilab Earth and Moon is built entirely from Second Life
+prims with applied textures.  There are no opaque mesh objects
+which you cannot modify in-world.
+
+The Earth and Moon object consists of five prims linked in a
+specific order.  If you unlink a prim to edit it and relink it
+in a different order, everything will break.  Be sure to
+preserve the link indices given at the top of the "Fourmilab
+Earth and Moon" script if you make such modifications.  The
+wooden base (whether visible or not) is the root prim of the
+linked set.
+
+The main script is within 10% of the maximum size permitted by
+Second Life.  If you want to add substantial code to it, you'll
+have to add it in an auxiliary script like the Legend script and
+communicate back and forth with the llMessageLinked() mechanism.
+
+Data Sources
+----------------
+
+Earth imagery is based upon the NASA Blue Marble Next
+Generation:
+    https://earthobservatory.nasa.gov/features/BlueMarble
+Visible Earth data sets:
+    https://visibleearth.nasa.gov/collection/1484/blue-marble
+in particular, the twelve monthly "Blue Marble Next Generation
+w/ Topography and Bathymetry" images which may be accessed from
+that page.  The full resolution PNG images, which are delivered
+in tiles to avoid size restrictions in image processing
+programs, were heavily processed to create the monthly textures
+used here.
+
+Moon imagery is based upon the Lunar Reconnaissance Orbiter
+Camera (LROC) Wide Angle Camera (WAC) 100 metre Global
+Morphology Mosaic, v3:
+    https://astrogeology.usgs.gov/search/map/Moon/LRO/LROC_WAC/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013
+with the original image:
+    https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif
+This is a 5.5 gigabyte image!  It was heavily processed to
+produce the texture used here.
+
+All of these data sources are in the public domain.
+
+License
+---------
+
+This product (software, documents, images, and models) is
+licensed under a Creative Commons Attribution-ShareAlike 4.0
+International License.
+    http://creativecommons.org/licenses/by-sa/4.0/
+    https://creativecommons.org/licenses/by-sa/4.0/legalcode
+You are free to copy and redistribute this material in any
+medium or format, and to remix, transform, and build upon the
+material for any purpose, including commercially.  You must give
+credit, provide a link to the license, and indicate if changes
+were made.  If you remix, transform, or build upon this
+material, you must distribute your contributions under the same
+license as the original.
