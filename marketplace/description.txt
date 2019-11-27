@@ -35,6 +35,9 @@ Development Kit
 
 A development kit is included with the product which provides all of the textures used in the models, diagnostic tools, and a development log.  All scripts and objects used in the model may be examined and modified as you wish.  The model is built entirely of Second Life prims: there is no opaque mesh which cannot be modified in-world.
 
+Source code for this project is maintained on and available from the GitHub repository:
+    https://github.com/Fourmilab/earth_and_moon
+
 License
 ----------
 
@@ -42,4 +45,3 @@ This product (software, documents, images, and models) is licensed under a Creat
     http://creativecommons.org/licenses/by-sa/4.0/
     https://creativecommons.org/licenses/by-sa/4.0/legalcode
 You are free to copy and redistribute this material in any medium or format, and to remix, transform, and build upon the material for any purpose, including commercially.  You must give credit, provide a link to the license, and indicate if changes were made.  If you remix, transform, or build upon this material, you must distribute your contributions under the same license as the original.
-

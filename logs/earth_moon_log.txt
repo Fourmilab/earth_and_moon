@@ -869,3 +869,17 @@ Added and committed:
     Scripts
     Logs (this file)
 
+Logged on to gitub.com.
+
+Created a new repository:
+    earth_and_moon
+with access URLs:
+    HTTPS: https://github.com/Fourmilab/earth_and_moon.git
+    SSH:   git@github.com:Fourmilab/earth_and_moon.git
+
+Pushed the production directory to the repository with:
+    git remote add origin git@github.com:Fourmilab/earth_and_moon.git
+    git push -u origin master
+
+Confirmed that my local "git sync" command works with the remote
+repository.
