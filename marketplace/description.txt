@@ -1,0 +1,45 @@
+Fourmilab's Earth and Moon combines high-resolution NASA imagery of the Earth (with ice, snow, and vegetation based upon the middle of each month) with calculation of the position of the Sun as observed from Earth to show the illuminated portion of a cloudless Earth.
+
+The Moon is shown in its current relative position to the Earth, with a day and night mask showing the illuminated and dark portions of the Moon.  The Moon is usually shown much closer to the Earth than its actual distance in order to fit in typical display spaces, but if you have a large property (say, 128 metres on a side), you can configure the Moon's distance to be at the correct scale.  The Moon's near face is oriented with respect to the Earth accounting for optical librations due to the eccentricity and inclination of the Moon's orbit.  Imagery of the Moon is derived from NASA high-resolution images from the Lunar Reconnaissance Orbiter spacecraft.
+
+Floating Text Legends
+------------------------------
+
+Floating text legends are displayed above the Earth and Moon (you can turn them off if you find them distracting) which show the following information:
+
+    Earth
+        Date and time (UTC)
+        Julian Day and fraction
+        Sub-solar point (latitude and longitude where the Sun is overhead)
+        Sub-lunar point (latitude and longitude where the Moon is overhead)
+            
+    Moon
+        Phase (percentage illuminated)
+        Age (days, hours, and minutes since New Moon)
+        Distance (Earth-Moon distance in km, Earth radii)
+        Angle subtended (apparent diameter of the Moon in degrees)
+        Date and time of Moon phases in this lunation
+        
+Chat Commands
+-----------------------
+
+A variety of commands may be sent via local chat which allow configuring the model, setting options, displaying the Earth and Moon for any date and time, running animations, and making the model slowly rotate.  Chat commands may be restricted to owner, group, or open to everybody.
+
+Dialogue Commands
+----------------------------
+
+Commonly-used commands may be submitted via a pop-up dialogue when the model is touched.  The dialogue may be restricted to owner, group, or available to everybody.
+
+Development Kit
+----------------------
+
+A development kit is included with the product which provides all of the textures used in the models, diagnostic tools, and a development log.  All scripts and objects used in the model may be examined and modified as you wish.  The model is built entirely of Second Life prims: there is no opaque mesh which cannot be modified in-world.
+
+License
+----------
+
+This product (software, documents, images, and models) is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.
+    http://creativecommons.org/licenses/by-sa/4.0/
+    https://creativecommons.org/licenses/by-sa/4.0/legalcode
+You are free to copy and redistribute this material in any medium or format, and to remix, transform, and build upon the material for any purpose, including commercially.  You must give credit, provide a link to the license, and indicate if changes were made.  If you remix, transform, or build upon this material, you must distribute your contributions under the same license as the original.
+

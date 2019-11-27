@@ -1,0 +1,9 @@
+Realistic scale model of Earth and Moon
+
+Shows day and night, Moon phases
+
+Displays real time or dates in past and future
+
+Shows Sun and Moon position, distances, phase dates
+
+Full permissions; scripts are open and modifiable
