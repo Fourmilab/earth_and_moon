@@ -1,0 +1,871 @@
+
+                    Fourmilab Earth and Moon
+                        Development Log
+
+2019 November 7
+
+After months of off-and-on development in fast and furious mode,
+we're now into a period of refinement, debugging, and cleaning
+up the user interface, so I decided to start keeping a formal
+development log.  For the record, this project began on 2019
+February 18 when the initial Earth globe and first texture were
+produced.
+
+Created a night and day mask with a sharp terminator, supplied
+in the development kit as the texture:
+    Textures/Terminator/terminator_sharp
+This isn't as pretty as the blurred terminator, but it's a lot
+more precise when debugging the exact orientation of the night
+side masks with respect to the Earth and Moon globes.
+
+Revised the calculation of the position of the Moon with respect
+to the Earth in updateModel() so that the geocentric distance to
+the Moon's centre is the parameter moonMeanDist in terms of
+Earth radii (previously fixed at 2) scaled by the computed
+radius vector over the semi-major axis of the Moon's orbit.
+This causes the Moon to (subtly) follow its actual eccentric
+orbit around the Sun.
+
+Added a proper "set" command handler in processCommand() and a
+new "set moondist" which allows specifying the mean distance of
+the Moon from the Earth in Earth radii, between 1.5 and 10.
+
+Ran squarely into the 64 Kb script limit.  Extracted the
+buildLegend() function and its dependencies from the main script
+into a new Legend script.  The updateModel() function in the
+main script now sends a JSON message to the Legend script via
+llMessageLinked() which, when received, composes the message
+from the passed arguments and displays it directly on the
+NIGHT_SIDE link.  Note that there is no need for the Legend
+script to communicate back to the main script.
+
+Pre-converted Lambda and Beta to radians in ecliptoeq() to save
+the time and space of a bunch of calls on dtr().
+
+Pre-converted eps and theta in sunpos() to save space and time.
+
+2019 November 8
+
+Added the ability to pass in pre-computed result lists from
+costly functions such as sunpos() and lowmoon() to functions
+which require their results.  This allows functions such as
+updateModel() to compute the Sun and Moon position a single time
+and pass the results in to functions which require them,
+avoiding redundant computation.  If you haven't precomputed the
+required positions, pass [] as the list argument and they will
+be computed internally by the function.
+
+Replaced long litanies of local variable declarations at the
+start of functions with on-the-spot declarations as the
+variables are initialised.  This saves bytecode and gives us a
+little more breathing room.
+
+Added a new Moon legend generation facility.  It is implemented
+in legend.lsl and is activated by a link message with a code of
+LM_MOON_LEGEND and passed the date and time, the sunpos() result
+list, and the lowmoon() result list.  It shows the Moon phase,
+age, distance, and angle subtended.
+
+2019 November 9
+
+Replaced the dialogue communication channel with a base defined
+as -982449714 in our range, XORed with the last seven hex digits
+of our llGetKey() for uniqueness.
+
+Revised function obliqeq() in the main script to directly
+initialise the oterms[] array with values in degrees rounded to
+9 significant digits rather than converting from arc seconds on
+the fly, which was costly in bytecode space and execution time.
+
+Added computation of the dates and times of Moon phases and
+display in the Moon legend by buildMoonLegend.  This involved
+importing the meanphase(), truephase(), and phasehunt()
+functions, which dropped me into one of the most horrific
+exercises in hand-crafted workarounds for single-precision
+floating point constraints in the whole sorry history of this
+project.  Computation of the time of Moon phases is sensitively
+dependent both upon large magnitude changes in the Julian day
+and fine differences in the fractional part, and the algorithm,
+which is straightforward (if lengthy) in double precision,
+explodes into a tower of cruft working around the limits of
+single precision and compulsively range-reducing angles to avoid
+loss of precision in adding terms.  In truephase(), we compute
+the whole and fractional parts of the time of the phase
+separately (normalising as required) and then report them as a
+Julian day whole and fraction list as we use elsewhere.
+
+The result of all of this is "not bad".  Moon phase times seem
+to be accurate to within a few minutes, which, while not as
+precise as the full computation in Meeus with all of the
+planetary terms, etc., is acceptable for our purposes and about
+the best which can be achieved with single precision floats (and
+a lot of elbow grease and pulling of long-departed hair).
+
+2019 November 10
+
+Our innocent-looking jyear() function (convert Julian day to
+Julian/Gregorian civil calendar date) ran afoul of
+single-precision roundoff when adjusting for the change of
+Julian day number at noon.  I had to replace it with a new
+jyearl() function which take a Julian day and fraction list and
+handles the whole and fractional parts separately as we have to
+do elsewhere.  This affects the function in both the main script
+(where it is used only to decide when the texture map for the
+Earth globe needs changing at the start of a month) and in the
+Legend script, where it is used for editing dates in a variety
+of places.
+
+Added proper (but telegraphic, due to the 254 character limit on
+PRIM_TEXT) labels for the quarter dates and times in the Moon
+legend.
+
+Added commands to handle the separate Earth and Moon legends.
+The chat command is:
+    Legend [Earth/Moon/Both] on/off
+If you omit the first argument, both legends are set on/off.
+Revised the dialogue to send commands to control the Earth
+and Moon legends separately.
+
+Eliminated a bunch more costly (space and time) dtr() calls and
+replaced with bulk conversion to radians before the variables are
+referenced in multiple calls to trigonometric functions.
+
+Added the ability for the "set moondist" command to set the
+Moon's distance to any Earth radii value from 1.5 to the maximum
+which results in an object size of 64 metres (this is scaled by
+the radius of the Earth globe).  "Set moondist real" sets the
+distance to the Moon's semi-major axis in terms of Earth radii,
+producing realistic scaling of the Earth and Moon.  (This won't
+work if the Earth globe is scaled larger than the default of 1
+metre radius due to the limit on object size).
+
+Rationalised the handling of time advance mode.  Gone is the
+confusing "animate" flag, replaced with timeMode, where 0
+indicates stopped (time does not advance), 1 is real time, and 2
+is animating.  A new Freeze command stops the update in either
+real time or animate mode.
+
+Replaced the top-level "Animation" commands with "set animation"
+sub-commands:
+    set animation rate t
+        Sets the animation update rate to t seconds.
+    set animation step d
+        Sets animation step to d days.  You can also say "day"
+        or "month" for the step.  Others can be added if needed.
+
+The "Animate" command now resumes the animation from the
+previous point where it was frozen, but starts from the current
+time if invoked when in real time mode.
+
+Added the:
+    set date yyyy-mm-dd hh:mm:ss
+    set date jjjjjjjjj.ffff
+commands to set date as a civil date or Julian day and
+fraction.  These are particularly costly in byte code due to all
+of the error checking, but will be very valuable for debugging.
+Setting the date freezes updates at that date.  You can then, if
+you wish, animate starting from the date set.
+
+Demoted the top level "base" command to "set base on/off",
+consistent with our other mode settings.
+
+2019 November 11
+
+Assigned SKU of F1-936047-00004-0 to "Fourmilab Earth and Moon".
+
+Added Unicode icons to represent the phases of the Moon to the
+Moon legend.  These icons show the phases as they appear from
+the northern hemisphere, which I suppose is fair enough since we
+also show the Earth and Moon with the north pole up.  In order
+to keep the legend below 254 characters (note that these Unicode
+icons occupy three bytes in UTF-8), I deleted the text
+explaining phase percentages.
+
+The next place the single precision serpent was lurking was in
+our humble jdate() function, which converts a civil date and
+time to a Julian day whole and fraction list.  When it was
+computing the whole part of the Julian day number, it performed
+a subtraction of 1524.5 in which the 0.5 was intended to correct
+for Julian days starting at noon.  Unfortunately,
+single-precision caused the 0.5 to be lost, which meant that
+times before noon UTC had whole day numbers one too high.  I
+changed the subtraction in the whole part to 1524, subtracted
+the 0.5 from the fractional part, and then, if that subtraction
+caused it to go negative, subtracted one from the whole part and
+added one to the fractional part.
+
+Replaced the Channel command with an equivalent "Set Channel"
+command.
+
+Replaced the Access command with an equivalent "Set Access"
+command.  The goal is to draw a clear distinction between
+commands which set modes (and also, by their nature, will be
+less frequently used by typical users) from those which perform
+an action.
+
+Completed the extirpation of the dtr() and rtd() function and
+their replacement with direct multiplies by DEG_TO_RAD and
+RAD_TO_DEG.  This isn't so much a matter of execution speed,
+since the calls in question are made infrequently, but of
+conserving bytecode space.  Function calls are hideously
+wasteful of code space compared to arithmetic expressions.
+
+Integrated new code to correctly position the day/night mask for
+the Moon after it is translated and rotated into the correct
+orientation with respect to the Earth.
+
+2019 November 14
+
+Deleted the memory status shown at state_entry() and replaced it
+with a message shown by the "stat[us]" command, which now also
+shows percent used as well as absolute numbers.  The stat
+command in the main script now sends an LM_STAT to linked
+scripts, which report their own status to the ID argument passed
+in the link message.
+
+Added a "set terminator soft/sharp" command to switch the
+texture for the Earth and Moon night masks between the soft and
+sharp day/night boundary masks.  The description of PRIM_TEXTURE
+in http://wiki.secondlife.com/wiki/PRIM_TEXTURE is very
+confusing. The vector argument "repeats" is documented as the
+number of repeats of the texture, but actually represents what
+are called "Horizontal scale" and "Vertical scale" in the prim
+edit Texture tab.  The "Repeats per meter" box does not figure
+in the PRIM_TEXTURE call.  The offset vector is as it appears in
+the Texture tab.  The .z field in both the repeats and offset
+vectors is ignored.  The rotation, which is shown in degrees in
+the Texture tab, is passed in radians to PRIM_TEXTURE.
+
+Our finely crafted code to rotate the Moon into the proper
+orientation with respect to the Earth fell on its face if the
+user had performed a global rotation of the linked model after
+instantiating it.  This was because it used global position and
+rotation of the Moon and Earth linked prims, which was inherited
+from the non-linked model used to develop the rotation code. I
+rewrote the whole mess to use local positions and rotations, and
+now it seems invariant under global rotation, which makes Emmy
+Noether smile.
+
+Added a temporary "test 2" command to force an updateModel(), to
+avoid waiting for the next periodic update when testing
+model-related code.
+
+2019 November 15
+
+Created the start of a Marketplace listing for the product,
+including photos.  The work directory for the photos is
+Secondlife/Earth_and_Moon/marketplace/images.  The processed
+images used in the Marketplace page are named Earth_Moon_?.png.
+
+2019 November 16
+
+Integrated the latest draft of the User Guide as the "Fourmilab
+Earth and Moon Help" notecard in the object.
+
+Modified the touch_start event handler to call checkAccess() to
+verify that the person who touched the model has permission to
+send chat commands to it.  If not, the touch is ignored. There's
+no point encouraging people to send commands which are only
+going be rebuffed with "You do not have permission to control
+this object."
+
+The cardinal points on the Moon orientation diagnostic texture
+were actually offset from the correct points in longitude. I
+made a new texture image with them corrected and at the same
+time made a new terminator_cardinal_points texture consisting of
+the sharp terminator image with cardinal points added (same
+orientation as for the Moon).  These are intended for fine
+debugging of rotation of the Moon and its day and night mask
+into the correct orientation with respect to the Earth.
+
+Added the new diagnostic cardinal point texture maps to the
+Development Kit folder for the in-development Marketplace
+listing.  When the Marketplace folder was created, the
+Development Kit folder was at the top level and hence was
+automatically activated.  I created a new "Fourmilab Earth and
+Moon v1.0" folder at the top level (this is consistent with the
+listings of our other products), moved the Development Kit
+folder within it (which deactivated it), and then activated the
+top level folder.  The top level folder will contain the model
+and the User Guide to be given to the customer when the product
+is purchased.
+
+2019 November 17
+
+Created a new "Fourmilab Earth and Moon User Guide" notecard in
+the "Projects/Earth and Moon" inventory folder.  This will be
+the master copy of the help file which is included in the model
+to be given to requesters via the Help command.  It will also be
+included in the top level directory on the Marketplace.
+
+Created a new "Fourmilab Earth and Moon Development Log"
+notecard in the "Projects/Earth and Moon" inventory folder. This
+will be included in the Development Kit subdirectory of the
+Marketplace listing.
+
+Performed a test to confirm that the rotation of the day/night
+mask to account for the tiny Moon subsolar latitude was in the
+correct direction.  I introduced a fake latitude large enough to
+see and checked the result visually.
+
+The application of librations to the Moon's orientation with
+respect to the Earth had latitude and longitude backwards.  The
+result list from libration() is [ Lat, Long ], not the other
+way!  Note that after we call libration() in updateModel, we
+invert the sign of the longitude to compensate for the eccentric
+way lunar longitudes are reckoned.
+
+Confirmed, by comparison with the Sky & Telescope November 2019
+Lunar Almanac, that the application of librations is in the
+correct direction for the four extremal libration dates of
+November 3, 12, 22, and 30.
+
+Computations in libration() and moonsubsolar() which depended
+upon the constant "meinc", which specifies the inclination of
+the mean lunar equator to the ecliptic in degrees were being
+torpedeoed by an "optimisation" I added in those functions a few
+days ago to get rid of the snowdrifts of byte code resulting
+from numerous calls to dtr().  I cleverly performed "meinc *=
+DEG_TO_RAD" before all of the trig functions calls that used it,
+failing to note that it was not a local variable in the
+functions like the others I fixed that way, but rather a
+constant in global scope.  This had the nasty result of making
+these functions impure, so that each call would further corrupt
+this constant and degrade accuracy of results as it was scaled
+down toward zero.  The fix was simple; just use a local variable
+to hold the value in radians.  Finding the problem, what I
+thought to be a pure function having a side effect on a global
+constant, almost had me believing in lizard people for a while.
+
+Integrated the new terminator and Moon rotation code developed
+as test command sequences.  The logic is as follows.  For the
+Earth, we determine the subsolar point and rotate the night mask
+so that it is opposite the subsolar point.
+
+For the Moon, the situation is much more complicated.  First, we
+have to compute the position of the centre of the Moon relative
+to the Earth, which is done by calculating the sublunar() point
+(Earth latitude and longitude where the Moon is directly
+overhead), then positioning the Moon and its night mask at that
+point relative to the centre of the Earth globe with its
+distance scaled by the instantaneous radius vector of of Moon.
+
+Now we must rotate the Moon and its day and night mask into the
+correct orientation with respect to the Earth.  For the Moon, we
+compute the vector between the centres of the Earth and Moon.
+This will intersect the origin of the Moon's co-ordinate system
+at the mean orientation.  Since the Moon goes north and south of
+the equator as seen from the Earth, we must tilt the Moon to
+point at the centre of the Earth and then rotate it so its prime
+meridian intersects the vector from the centre of the Earth.
+Further complicating things, we need to adjust for the optical
+librations of the Moon: the apparent tilt and turn of the Moon
+as seen from the Earth due to the inclination and eccentricity
+of its orbit.  The librations are handled as adjustments to the
+orientation of the mean centre point.
+
+Actually rotating the Moon introduces additional complexity.
+First of all, because of the way the texture is applied to the
+Moon sphere prim, we have to rotate by 90 degrees around its
+local Y axis to put the north pole in the proper position. Next,
+we turn the Moon to put the point where the Earth is directly
+overhead (accounting for librations) pointing at the Earth.  But
+this turn rotates the local X axis of the Moon to a different
+orientation, so we must first compute the new, post-turn, X axis
+by rotating a <-1,0,0> vector by the turn rotation in the Z
+axis.  We then effect the turn by performing a llAxisAngle2Rot()
+around this rotated X axis with the desired tilt, composed of
+the Moon's latitude as seen from Earth and the libration in
+latitude.
+
+For the Moon's day and night mask, there are additional wrinkles
+(or, perhaps I should say, twists and turns).  First, we need to
+align the day and night mask with the Moon so that it points
+toward the Earth, corrected for libration.  This is done as
+described in the previous paragraph.  Then, we must further
+displace the day and night mask so that the centre of its day
+side is aligned with moonsubsolar() point as computed by the
+eponymous function.  This is done by further adjustments to the
+rotations in Z and rotated X done for the Moon.
+
+Added a new syncTimer() function to replace explicit setting of
+the timer to UPDATE_TERMINATOR.  When called, it gets the Unix
+time value and calculates how many seconds will elapse until the
+next round UPDATE_TERMINATOR interval.  With UPDATE_TERMINATOR
+set to the default of 60 seconds, this guarantees that the model
+will update as close as possible to the top of the minute, not
+some random time within the minute.
+
+Modified the editJDtoUTC() function in the Legend script to
+round the nearest minute in the time displayed as hours and
+minutes.  This ensures the time shown in the Earth globe legend
+changes at the top of the minute.  It also makes the Moon phase
+times, which are also shown to the nearest minute, more
+accurate.
+
+2019 November 18
+
+Moved the "legend" command from a full-fledged command to a set
+variable.  This is more consistent with what it does.
+
+To allow adding additional commands and set variables with
+syntax like "set legend" without blowing up bytecode size, I
+broke its parsing logic out into a new function,
+parseGlobeMode(), which returns a bit-coded integer indicating
+normal/error status, which globes(s) upon which to operate, and
+the on/off mode.
+
+Using this new function, added a new "set night" variable which
+allows showing or hiding the night side masks for the Earth,
+Moon, or both.
+
+Added a comprehensive status display, almost all implemented in
+the Legend script, which shows:
+    Free and used memory for the Main and Legend scripts
+    Root prim position and rotation
+    Julian day and date and time in UTC
+    Sun position
+    Subsolar point on Earth
+    Moon position
+    Lunar librations
+    Sublunar point on Earth
+    Subsolar point on Moon
+    Lunation number
+We reply to chat commands via llRegionSayTo(), which has a 1024
+character limit on messages transmitted.  The entire status
+message is less than 750 characters and fits comfortably, so I
+made the status a single long string with line breaks, which
+makes it more readable in the chat window than individual lines
+each prefixed with the sender's identity and time.
+
+There is a huge gotcha for anybody passing LSL structured
+variables among scripts via JSON.  When you pass an integer or
+float it comes across as its native type when converted back to
+a list with llJson2List(), but vectors and rotations are stored
+as strings in the list, not converted to their native types.
+You have to extract them with llList2String() and the cast them
+to the proper type to effect the conversion.
+
+Replaced a lot of calls on llList2Float(timenow, n) in
+updateModel() with assignments to local variables jd and jdf,
+which are then passed in to all of the function calls requiring
+them.  This is not only faster, but it saved around 500 bytes of
+bytecode by eliminating the repeated API function calls.
+
+Filled in the lists of valid commands and set variables which
+are displayed when an invalid entry is made.
+
+Tested stretch of overall model (with Stretch textures)
+checked.  It seems to work fine.
+
+Tried a global rotation of the model and shrinking to a small
+size.  That's also fine.
+
+Made Marketplace images, Earth_Moon_6 and Earth_Moon_7, showing
+ice and snow cover for July and January.  The font used to label
+the images is Google font "Baloo Bhaijaan" 60 point white.
+
+Remade the Main and Legend scripts with canonical Fourmilab
+white space and trim standards.  There will probably be another
+pass before we're ready to ship, but this will have cleaned up
+most of the debris from editing during the last couple of weeks.
+
+2019 November 19
+
+Updated the User Guide and Help text in the model (which are
+identical) to the latest version incorporating newly-added
+features and information on sources of the Earth and Moon
+imagery.
+
+Fixed a few unused variables and one unnecessary local constant
+definition within a function which was already defined in global
+scope.  These were found by running the scripts through lslint:
+    https://github.com/Makopo/lslint
+
+2019 November 20
+
+To complete the orientation debugging tools, made an Earth
+texture with control points, named Earth_Day_CP.png in the
+development directory.  Added to the Earth textures in the
+development kit and to the object's inventory.  Added a flag,
+"cardinal", which if set will cause updateModel() to select this
+texture instead of one based upon the current month.  The
+underlying image for Earth_Day_CP is the November image,
+Earth_Day_11.
+
+In case we need additional cardinal points textures, I made a
+generic cardinal points image, cardinal_points.xcf, containing
+just the cardinal points with a transparent background layer.
+
+Added all of the cardinal point textures to the model and
+implemented a "set cardinal on/off" command to select or remove
+them for all globes.  The "set cardinal off" command restores
+the terminator masks to sharp; if you'd like to go back to soft,
+use "set terminator soft" afterward.
+
+Added a "set fixed [Earth/Sun] variable.  This controls whether
+the Earth globe is held in a fixed position in global space,
+with the day and night mask moving around it, or whether the day
+and night mask points at the Sun and the Earth rotates under
+it.  This is a matter of personal preference.  Showing the Earth
+rotating is more faithful to what you'd see from a distance in
+space, but people who want to position the globe in, say, a
+corner, showing their own location on Earth to viewers, may
+prefer the fixed Earth display and moving terminator.
+
+Added a "set Moon on/off" variable.  This hides or displays the
+Moon.  Note that this must interact with the "set night" command
+so we don't have embarrassments like turning on the day/night
+mask while the Moon is hidden.  Note that showing or hiding the
+Moon legend is independent of whether the Moon is displayed.
+
+The ability to hide the Moon created the embarrassing
+circumstance where you could be walking near the model and
+collide with the invisible Moon.  I'd like to make the Moon and
+its terminator mask phantom when it's hidden, but you can't do
+that: an object composed of linked prims must be all one
+status.  So, I set the status of the entire model to phantom.
+This means you can't collide with it and can walk right
+through.  Note, however, that you can still sit on a phantom
+prim, so that still works.
+
+Extracted all constant messages sent to tawk() (almost all error
+messages from the command processor) into a list in the Legend
+script.  A new tawkr() function requests these messages by list
+index in the main script by sending a LM_MESSAGE link message
+with the ID to whom the message should be sent and the message
+index passed as the string argument of the message.  There is no
+need for the Legend script to communicate back to the main
+script.  This scheme saved between 1600 and 1750 bytes depending
+upon when you measure it, bringing us back from the brink.
+
+2019 November 21
+
+Rounding to the nearest minute in editJDtoUTC() in the Legend
+script could produce an inane time such as "2019-11-04 11:60" if
+presented with a date and time such as "2019-11-04 11:59:35".  I
+modified the function to perform completely general rounding of
+the time to the nearest minute, including propagating rounding
+past midnight into the date.  This would, of course, be trivial
+if we were working with double precision Julian days, but we
+aren't, so it isn't.
+
+Added logic to correctly transform the Moon's position when
+running with the Sun's position fixed and the Earth inclining
+with the seasons.  In this case we must first project a vector
+from the centre of the Earth to the Moon's equatorial longitude
+(corrected for the current rotation of the Earth on its axis),
+and then rotate that vector to the latitude of the subsolar
+point.  This yields the position of the Moon relative to the
+inclined Earth.
+
+After wasting the better (or is it the worst) part of a day
+chasing what I believed to be a co-ordinate transformation
+and/or rotation problem in updateModel() computing the position
+of the Moon with respect to the Earth, I discovered it was a
+bonehead blunder in mis-parenthesising an expression in
+ecliptoeq() introduced when I was replacing calls on dtr() and
+rtd() in the interest of saving space.  I inadvertently called
+fixangle(), which expects an argument in degrees, with a value
+in radians and then converted the result to degrees, resulting
+in absurdly large and wrong results for the right ascension
+returned for the function (the declination expression was
+correct and did not have this problem).  I moved the parenthesis
+and all was well.
+
+Displaying the dialogue caused animations and periodic real time
+updates of the model to freeze because the timed updates were in
+the else clause of the test on listening.  I changed the logic
+so they are performed regardless of whether the dialogue is
+displayed.
+
+The commands sent by the dialogue were not updated to
+accommodate the change of the "legend" command to "set legend".
+For clarity and due to the limited length of button labels in
+dialogues, I added a little hack at the start of
+processCommand() which transforms the button label into the
+proper set command.
+
+Changed the label on the "Spin" dialogue button while a spin is
+in progress from "Stop" to "Stop spin".
+
+The "Stop" command was stopping the spinning of the object but
+failed to reset the global rotation position to the start point.
+After far more time than I wished to spend on such an issue, I
+discovered this turns out to another one of Second Life's
+eccentricities due to the division of labour between the server
+and the viewer and timing issues in asynchronous communication
+between them.  Here is the explanation from the script.
+    What's all this, you ask?  Well, you see, when you
+    Omega rotate a non-physical prim, the operation is
+    performed entirely locally, in the viewer.
+    Apparently, then, after stopping the rotation, if
+    you want to explicitly rotate the prim (or in this
+    case, a linked object) to a fixed location, such as
+    the starting point, the rotation is ignored (my
+    guess is because the server doesn't know the prim
+    has been rotated by the viewer).  So, what we have to
+    do is a little jiggle of a local rotation to
+    persuade the server that it has moved, and then do
+    the actual rotation to put it where we want it.  Oh,
+    and one more thing: that little jiggle can't be a
+    llSetLinkPrimitiveParamsFast()--it has to the full
+    one that waits 200 milliseconds because apparently
+    the fast variant is too fast for the server to twig
+    to the fact that you've rotated it with Omega.
+
+Moved the generation of the dialogue from the main script to the
+Legend script.  The main script sends a LM_DIALOGUE message with
+JSON arguments specifying the channel, the parameters which
+affect which buttons are displayed, and the ID of whoever
+touched the object.  The Legend script composes and displays the
+dialogue, whose responses are processed by the listener in the
+main script.  There is thus no explicit communication back to
+the main script: it is all done by the dialogue reply mechanism.
+
+2019 November 22
+
+Rewrote the logic in updateModel() which computes the position
+of the Moon relative to the Earth to rotate and scale a unit X
+axis vector rather than doing it the hard way with trig
+functions based on the latitude and longitude angles.  This is
+not only cleaner and faster, by getting rid of lots of API
+function calls it saved more than 700 bytes of script memory.
+It also got rid of the confusion in the code between moonp and
+moonP, the latter of which no longer exists.
+
+Because the floating text legends above the Earth and Moon are
+generated in the Legend script (to save memory in the main
+script), and this update is asynchronous with the main script,
+there was a potential race condition in which the main script
+would process a "set legend" command to turn one or both of the
+legends off while the Legend script had not yet completed
+processing an LM_EARTH_LEGEND or LM_MOON_LEGEND link message to
+update a legend.  This had the result that the main script would
+hide the legend and then, when the Legend script completed the
+update, it would re-appear because there's no way to change the
+PRIM_TEXT without also setting the alpha, and the Legend script
+did not know the legend had been hidden.  I ripped out all of
+the code in the main script to directly handle legend visibility
+and replaced it with a new LM_LEGEND_VIS message which causes
+the Legend script to handle it locally.  The Legend script now
+maintains its own local visibility flags for the legends and
+ignores update requests which sneak in after a legend has been
+hidden.  This also eliminates a substantial amount of tangled
+code in the main script, saving almost 1000 bytes of script
+memory.
+
+Added a series of cryptically named functions to the Legend
+script to provide better formatting for the Status command
+output.  First of all, edfv() (Edit FLoat Variable)) takes a
+string representing a floating point number and returns a string
+with nonsignificant trailing zeroes and, if the number has no
+fractional part, the decimal point deleted.  This makes output
+more compact and readable without mindless trailing zeroes all
+over.
+
+The edfls() function takes a a format string in which the
+sequence "%f" indicates where numbers, formatted with edfv(),
+should be interpolated and a string containing a comma-separated
+list of floating point values.  This is, at present, not called
+directly but used by the following two functions.
+
+The efdlf() function takes a format string as used by edfls()
+and a list of floating point values and edits them into the
+string.  The list argument is converted to a comma-separated
+string with llList2CSV(), which preserves more significant
+digits than casting the floats to a string with "(string)".
+
+Finally, edflo() takes a format string and a string containing a
+LSL object such as a vector or rotation and edits the values
+into the format string.  It simply deletes the leading and
+trailing brackets of the value string and passes the remainder
+to edfls().
+
+These are used in the showStatus() function to compose the
+result from the "Status" command in response to an LM_STAT
+message.
+
+2019 November 23
+
+Fixed a goof in the "set legend" command where the code for the
+Moon legend was setting the visibility status for the Earth, not
+the Moon.
+
+Added logic to the touch_start() event handler so that if the
+object is touched by somebody who doesn't have permission to
+send chat commands, the Marketplace information page for the
+product will be offered to them so they can get their own.
+
+2019 November 24
+
+Completed a major restructuring of the scripts to put an end, at
+least for a decent interval, to our recurrent out of memory
+crises.  Rather than nibbling around the edges, I broke out
+updateModel() and all of the positional astronomy functions it
+uses from the main script into a new "Update Model" script
+which, upon receiving a LM_UPDATE_MODEL link message containing
+the Julian day for which the model should be displayed and a
+handful of parameters (for example, legend visibility, Earth/Sun
+fixed and inclination modes, etc.) performs all of the
+computations and updates the model accordingly.  What is key
+about this partitioning of the task is that there is no need for
+the Update Model script to communicate back to the main
+script­-its effects are only expressed in changes to the model.
+
+Removing the astronomical functions from the main script
+required getting Update Model involved in generation of the
+"Status" command output.  When the main script receives a Status
+command, it collects its local information and passes it on to
+Update Model in a LM_STAT_MODEL message.  That script then
+computes the information for which it is responsible and
+forwards everything to the Legend script in a LM_STAT message.
+The Legend script then appends its own information and sends
+everything to the requester.  Once again, this is a
+uni-directional pipeline with no handshaking required.
+
+The result of all of this was a much more even division of
+memory requirements among the scripts, with plenty of breathing
+room in the main script, where we're most likely to need it
+since that's where the user interface resides.  Current memory
+usage is as follows.
+    Main script     45%
+    Update Model    64%
+    Legend          75%
+Note that we've jammed a bunch of stuff into the Legend script
+due to crises in the main script which can easily be moved back
+should the Legend script draw closer to the brink.
+
+Spent a little bit of that glorious extra memory in the main
+script fixing a long-term annoyance: the redundant trailing
+zeroes in the messages confirming animation rate and step.  I
+integrated the edfv() function from the Legend script, changing
+it to take a float rather than a string argument, and used it
+when displaying these messages.
+
+Integrated the Sit Target code developed in the fork in the
+Villa Courtyard during the memory crisis.  This code, which was
+developed in the main script, now goes into the Update Model
+script, where there is room for it.  In the LM_INIT handler,
+initModel(), sit targets are defined for the terminator masks of
+the Earth and Moon so that users may sit on them independently.
+(Note that since the terminator masks are larger than the globes
+within, a right click to sit will always select that link.)
+
+When a user sits on one of the links, a changed() event handler
+in the Update Model script is notified, which inquires whether
+an avatar is seated on each link with llAvatarOnLinkSitTarget(),
+setting sitterEarth or sitterMoon to the link number on which
+the avatar is sitting (note, not the avatar key).
+
+The showStatus() function in the Legend script was extended to
+show which avatars, if any, are sitting on the link targets,  A
+new statSitter() function composes the message for a sitting
+avatar and returns a null string if none is sitting.  If, for
+some reason, llGetUsername() fails to return the avatar's user
+name, the key is shown instead.
+
+In the updateModel() function in the Update Model script, after
+computing the position of the Moon with respect to the Earth
+globe, if an avatar is seated on the Moon, we adjust the
+avatar's position based upon the motion of the Moon since the
+last update.  This causes the avatar to move with the Moon
+rather than being left in mid-air as the Moon moves away.
+
+2019 November 25
+
+Implemented a "Step" command.  This takes one animation step for
+each command, after which the clock is stopped.  You can go back
+and forth between Animate and Step modes as you wish.  Added a
+Step button to the dialogue.  Modified the dialogue composition
+logic so if the clock is stopped (in Freeze or Step mode), the
+Animate/Real Time button shows Real Time.
+
+Here is the key insight you need to understand when moving
+avatars on sit targets to adjust for relative motion when the
+link containing the sit target moves with respect to the object
+within which it is a link.  While sit targets are specified by
+llLinkSitTarget() relative to the prim containing the target,
+when you move a sitting (linked) avatar with PRIM_POS_LOCAL the
+location is relative to the origin of the linked set as a whole,
+as the seated avatar is a child of the root prim of the set.
+Hence, if you want to specify the location of the avatar
+relative to the prim on which it is seated, you must transform
+that co-ordinate into one relative to the llGetRootPosition() of
+the link set.
+
+Modified the code which rotates an avatar seated on the Earth to
+reset its position at the top of the globe regardless of how the
+sit target in the terminator mask may have been rotated due to
+the Sun's longitude and declination.  When running an animation,
+the avatar rotates with the Earth's diurnal motion, regardless
+of whether the Earth or Sun is fixed in the presentation.
+
+Correctly rotating an avatar sitting on the Moon (for example,
+to make it always look toward the Earth) would require knowing
+the centre point of the seated avatar's representation in the
+viewer, which is not accessible to our script on the server.  I
+settled for keeping the avatar on the sit target, with its
+initial orientation, and moving along it with the Moon.  This
+makes the avatar rotate with respect to the Earth once per
+month.
+
+Verified that the positioning and rotation of seated avatars
+works correctly when the model as a whole is rotated with
+respect to the world co-ordinate system.
+
+Our minimum animation rate of 0.01 seconds was absurdly too
+small.  It would result in a back-up of link messages to the
+Update Model script and long delays in processing commands to
+stop animation, etc.  I changed the mininum rate to 0.1 seconds,
+which is also the default.
+
+Added code to Update Model and Legend to time functions. Typical
+times measured were:
+    updateModel()       0.022 sec
+    LM_EARTH_LEGEND     0.000 sec (limit of clock resolution)
+    LM_MOON_LEGEND      0.044 sec
+so my guess that updating the Moon legend, which involves
+recomputing the phase table, is the most costly of our
+operations and worthy of optimisation was correct.
+
+Based upon these results, I added code to buildMoonLegend() in
+the Legend script which, before computing the table of Moon
+phases, checks whether the current date is within the date range
+of the last table.  If so, it, and the text prepared from it, is
+simply used unchanged.  This means that rather than computing
+the phase table every time the legend is updated, now we only do
+it once per synodic month (in real or simulated time).  On calls
+which don't recompute the phase table the time spent updating
+the Moon legend is now too small to reliably measure.
+
+2019 November 26
+
+Revised the "Set animation step" command to take a proper number
+and unit specification.  The command syntax is:
+    Set animation step [n] [unit]
+where n is a floating point number and unit is one of: minute,
+hour, day, week, month, lunation.  If n is omitted, 1 is assumed.
+If unit is omitted, "day" is assumed.
+
+2019 November 27
+
+The Reset command only reset the main script, and could leave
+persistent state in the Legend and Update Model scripts
+inconsistent.  Added a LM_RESET link message which is sent by
+the main script and, upon receipt by the other scripts, causes
+them to perform a llResetScript().
+
+Created local development Git repository in:
+    ~/w/SecondLife/Earth_and_Moon/git
+with:
+    git init
+
+Added and committed:
+    Special files (README.md, etc.)
+    Textures
+    Notecards (User Guide / Help file)
+    Marketplace (listing text, images)
+    Scripts
+    Logs (this file)
+
