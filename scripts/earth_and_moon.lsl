@@ -30,7 +30,7 @@
     float anistep = 0.01;               // Animation step in days
     float moonMeanDist = 2;             // Moon's mean display distance in globe radii
     integer timeMode = 1;               // Time mode:  0 = Stop, 1 = Real time, 2 = Animate, 3 = Step
-    integer cardinal = TRUE;            // Show cardinal points on textures
+    integer cardinal = FALSE;           // Show cardinal points on textures
     integer fixSun = TRUE;              // Fix Sun, rotate Earth ?
     integer inclineEarth = TRUE;        // If Sun fixed, incline Earth ?
     integer showMoon = TRUE;            // Show the Moon ?
@@ -735,6 +735,11 @@
                      presently the only state we have.  */
 
     default {
+
+        on_rez(integer start_param) {
+            llResetScript();                // Force script reset
+            llMessageLinked(LINK_THIS, LM_RESET, "", NULL_KEY); // Reset other scripts
+        }
 
         /* At state_entry we define a channel to talk to the
            dialogue, set the globe's rotation state, and start

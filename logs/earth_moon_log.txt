@@ -883,3 +883,14 @@ Pushed the production directory to the repository with:
 
 Confirmed that my local "git sync" command works with the remote
 repository.
+
+When a new instance was rezzed from inventory (for example, by
+somebody who had just obtained a copy from the Marketplace), the
+scripts were not reset, causing the model not to update until
+the next timer update.  I added an on_rez() event handler to the
+main script to cause it and the other scripts to reset when the
+model is rezzed.
+
+In the main script, cardinal was set TRUE by default.  I set it
+FALSE so a script reset won't switch back into showing cardinal
+points.
