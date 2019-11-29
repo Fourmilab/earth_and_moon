@@ -55,6 +55,8 @@
     integer inclineEarth = TRUE;        // If Sun fixed, incline Earth ?
     float moonMeanDist = 2;             // Moon's mean display distance in globe radii
 
+//  integer showEarth = FALSE;          // Hide and don't update Earth (for making Moon demos)
+
     //  Internal state variables
 
     integer wasFixed = -1;              // Last displayed value of fixSun
@@ -610,7 +612,12 @@
                 }
             }
             monthtex = "Earth_Day_" + monthtex;
+//          if (showEarth) {
             llSetLinkTexture(DAY_SIDE, monthtex, ALL_SIDES);
+//          } else {
+//              llSetLinkAlpha(DAY_SIDE, 0, ALL_SIDES);
+//              llSetLinkAlpha(NIGHT_SIDE, 0, ALL_SIDES);
+//          }
             currentMonth = monthNow;
         }
 
@@ -632,6 +639,7 @@
 
             Ezang = llList2Float(sunpos, 1) * DEG_TO_RAD;
             vector ErotatedZ = <0, 0, 1> * llEuler2Rot(<Exang, 0, 0>);
+//          if (showEarth) {
             if (inclineEarth) {
 
                 //  Night side mask stays vertical, Earth inclines
@@ -676,12 +684,14 @@
                     llEuler2Rot(<0, 0, Ezang>)
                 ]);
             }
+//          }
 
         } else {
 
             //  Earth is fixed: Sun moves
 
             vector ErotatedX = <-1, 0, 0> * llEuler2Rot(<0, 0, Ezang>);
+//          if (showEarth) {
             llSetLinkPrimitiveParamsFast(NIGHT_SIDE, [ PRIM_ROT_LOCAL,
                 //  Rotate to put North up
                 llEuler2Rot(<0, -PI_BY_TWO, 0>)
@@ -701,6 +711,7 @@
                     llEuler2Rot(<0, 0, -PI_BY_TWO>)
                 ]);
             }
+//          }
         }
         wasFixed = fixSun;          // Update last fixed setting
 
