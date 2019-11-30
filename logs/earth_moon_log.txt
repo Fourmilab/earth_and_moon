@@ -817,7 +817,7 @@ respect to the world co-ordinate system.
 Our minimum animation rate of 0.01 seconds was absurdly too
 small.  It would result in a back-up of link messages to the
 Update Model script and long delays in processing commands to
-stop animation, etc.  I changed the mininum rate to 0.1 seconds,
+stop animation, etc.  I changed the minimum rate to 0.1 seconds,
 which is also the default.
 
 Added code to Update Model and Legend to time functions. Typical
@@ -869,7 +869,7 @@ Added and committed:
     Scripts
     Logs (this file)
 
-Logged on to gitub.com.
+Logged on to github.com.
 
 Created a new repository:
     earth_and_moon
@@ -894,3 +894,51 @@ model is rezzed.
 In the main script, cardinal was set TRUE by default.  I set it
 FALSE so a script reset won't switch back into showing cardinal
 points.
+
+2019 November 28
+
+Spent most of the day producing a YouTube video demonstration of
+the model.  The URL for the video is:
+    https://www.youtube.com/watch?v=aX3WsYLhoDw
+    https://youtu.be/aX3WsYLhoDw
+It is currently set so only people who know the link can see it.
+I will make it public when the product is listed in the
+Marketplace.
+
+2019 November 29
+
+Added the YouTube video to the Marketplace listing.
+
+Integrated the "showEarth" code developed to produce the Moon
+orbit segment of the demonstration video into the production
+version of the Update Model script, but commented out.  This
+code, if enabled, hides the Earth and its terminator mask and
+suppresses all updates of its position and texture.  This allows
+making clean videos of the behaviour of the Moon in animations
+without interference from the Earth (whose wild gyrations cause
+video compression algorithms to collapse).  This feature is not
+remotely ready to unleash on users, few of whom would have need
+for it, (for example, the Earth, once hidden, cannot be restored
+to visibility without editing its link manually), but I'm
+keeping the code around so that if I need it again to update the
+video or do another similar demonstration, I won't need to
+develop it from scratch.
+
+2019 November 30
+
+Added an "About the Video" section to the description on YouTube
+to explain the source of glitching in animations and blurring of
+the Earth globe when textures are swapped at the start of each
+month.
+
+After verifying my YouTube account (involving a text message to
+a mobile phone), I uploaded a custom thumbnail image.  The
+thumbnail must be no larger than 2 Mb, so I scaled down the
+screen grab to 1200x675 pixels to fit.  The final thumbnail
+image is movies/YouTube_thumbnail_1200.png.  The original
+1920x1080 image was saved as movies/YouTube_thumbnail.png in
+case we should need it in the future.
+
+Activated listing in the Marketplace.  Made the YouTube
+demonstration video public.  This is the official release of
+version 1.0.
