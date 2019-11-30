@@ -172,7 +172,7 @@ case.  Available commands are:
             according to the Moon's instantaneous distance.  If
             you specify "real", the Moon will appear at a
             distance to scale with the size of the Earth and
-            Moon globes. The Moon is a long way from the Earth!
+            Moon globes.  The Moon is a long way from the Earth!
             If you use the default globe sizes, you'll need a
             large property (on the order of 128×128 metres,
             assuming the Earth globe is at the centre) so that
@@ -191,7 +191,7 @@ case.  Available commands are:
             "soft", a blurred division will be shown.
             Unfortunately, the rendering engine in most Second
             Life viewers handles the soft terminator in an
-            eccentric manner, and you'll probably be happier
+            infelicitous manner, and you'll probably be happier
             with the appearance of the sharp terminator.
 
     Spin
@@ -308,11 +308,6 @@ Earth and Moon" script if you make such modifications.  The
 wooden base (whether visible or not) is the root prim of the
 linked set.
 
-The main script is within 10% of the maximum size permitted by
-Second Life.  If you want to add substantial code to it, you'll
-have to add it in an auxiliary script like the Legend script and
-communicate back and forth with the llMessageLinked() mechanism.
-
 Data Sources
 ----------------
 
@@ -334,7 +329,7 @@ Morphology Mosaic, v3:
     https://astrogeology.usgs.gov/search/map/Moon/LRO/LROC_WAC/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013
 with the original image:
     https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif
-This is a 5.5 gigabyte image!  It was heavily processed to
+This is a 5.5 gigabyte image!  It was extensively processed to
 produce the texture used here.
 
 All of these data sources are in the public domain.
