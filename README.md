@@ -1,5 +1,7 @@
 # Fourmilab Earth and Moon
 
+![Fourmilab Earth and Moon](marketplace/images/Earth_Moon_1.png)
+
 [Fourmilab Earth and Moon](https://marketplace.secondlife.com/p/Fourmilab-Earth-and-Moon/18452910)
 is a model of the Earth and Moon system for the
 [Second Life](https://en.wikipedia.org/wiki/Second_Life) virtual world
